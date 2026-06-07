@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Nova Sales Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.0.0/dist/tabler-icons.min.css"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --p:#2D1B69;--pa:#4C3A9E;--pl:#7C6FCD;--pdim:rgba(45,27,105,0.06);--pbg:#F0EEF9;
+  --bg:#F7F6FA;--w:#FFFFFF;--t1:#1A1628;--t2:#4A4660;--t3:#8B879E;--t4:#C4C1D4;
+  --b1:#E8E5F0;--b2:#D0CBEA;
+  --bull:#0B6E4F;--bullbg:#E8F5F0;
+  --bear:#C0392B;--bearbg:#FDF0EF;
+  --warn:#B8600A;--warnbg:#FDF3E7;
+  --r6:6px;--r10:10px;--r14:14px;--r20:20px;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t1);font-size:14px;min-height:100vh;}
+a{text-decoration:none;color:inherit;}
+
+/* ── LAYOUT ── */
+.app{max-width:1100px;margin:0 auto;padding:24px 20px;}
+
+/* ── TOPBAR ── */
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;}
+.logo{display:flex;align-items:center;gap:10px;}
+.logo-mark{width:32px;height:32px;background:var(--p);border-radius:8px;display:flex;align-items:center;justify-content:center;}
+.logo-mark svg{width:18px;height:18px;}
+.logo-text{font-size:16px;font-weight:500;color:var(--t1);}
+.logo-text span{color:var(--pa);}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.profile-btn{display:flex;align-items:center;gap:7px;background:var(--w);border:1px solid var(--b1);border-radius:999px;padding:6px 14px;font-size:13px;color:var(--t2);cursor:pointer;transition:border-color .15s;}
+.profile-btn:hover{border-color:var(--b2);}
+.profile-dot{width:7px;height:7px;border-radius:50%;background:var(--bull);}
+
+/* ── DIGEST BANNER ── */
+.digest-banner{display:flex;align-items:center;gap:14px;background:var(--w);border:1px solid var(--b1);border-radius:var(--r14);padding:14px 18px;margin-bottom:24px;}
+.digest-icon{width:36px;height:36px;border-radius:9px;background:var(--pdim);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.digest-icon i{font-size:18px;color:var(--pa);}
+.digest-info{flex:1;}
+.digest-title{font-size:13px;font-weight:500;color:var(--t1);}
+.digest-sub{font-size:12px;color:var(--t3);margin-top:1px;}
+.toggle{display:flex;align-items:center;gap:8px;cursor:pointer;}
+.toggle-label{font-size:12px;color:var(--t2);}
+.toggle-track{width:36px;height:20px;border-radius:999px;background:var(--pa);position:relative;transition:background .2s;flex-shrink:0;}
+.toggle-track.off{background:var(--b2);}
+.toggle-thumb{width:16px;height:16px;border-radius:50%;background:#fff;position:absolute;top:2px;right:2px;transition:right .2s;}
+.toggle-track.off .toggle-thumb{right:auto;left:2px;}
+
+/* ── FILTERS ── */
+.filter-row{display:flex;gap:7px;margin-bottom:28px;flex-wrap:wrap;align-items:center;}
+.filter-label{font-size:11px;color:var(--t3);margin-right:4px;font-family:'DM Mono',monospace;}
+.filter-btn{font-size:12px;padding:5px 13px;border-radius:999px;border:1px solid var(--b1);background:var(--w);color:var(--t2);cursor:pointer;transition:all .12s;}
+.filter-btn:hover{border-color:var(--b2);}
+.filter-btn.on{background:var(--p);border-color:var(--p);color:#fff;}
+.filter-sep{width:1px;height:18px;background:var(--b1);margin:0 4px;}
+
+/* ── SECTION ── */
+.section-head{font-size:11px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;color:var(--t3);margin-bottom:12px;font-family:'DM Mono',monospace;}
+
+/* ── CARD GRID ── */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:28px;}
+.co-card{background:var(--w);border:1px solid var(--b1);border-radius:var(--r14);padding:16px;cursor:pointer;position:relative;overflow:hidden;transition:all .15s;}
+.co-card:hover{border-color:var(--b2);transform:translateY(-1px);box-shadow:0 4px 16px rgba(45,27,105,.06);}
+.co-card.customer::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--bull);}
+.co-card.competitor::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--bear);}
+.card-logo-wrap{width:36px;height:36px;border-radius:9px;background:var(--bg);display:flex;align-items:center;justify-content:center;margin-bottom:10px;overflow:hidden;}
+.card-logo-wrap img{width:28px;height:28px;object-fit:contain;}
+.card-logo-fallback{font-size:13px;font-weight:500;color:var(--t3);}
+.card-name{font-size:14px;font-weight:500;color:var(--t1);margin-bottom:2px;}
+.card-region{font-size:11px;color:var(--t3);margin-bottom:10px;}
+.card-badges{display:flex;gap:4px;flex-wrap:wrap;}
+.badge{font-size:10px;padding:2px 8px;border-radius:999px;font-weight:500;}
+.badge-new{background:var(--pbg);color:var(--pa);}
+.badge-alert{background:var(--bearbg);color:var(--bear);}
+.badge-ok{background:var(--bg);color:var(--t4);}
+.blink-dot{position:absolute;top:12px;right:12px;width:7px;height:7px;border-radius:50%;animation:blink 1.4s ease-in-out infinite;}
+.blink-dot.new-dot{background:var(--pa);}
+.blink-dot.alert-dot{background:var(--bear);}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.15;}}
+
+/* ── DETAIL VIEW ── */
+.detail-view{display:none;}
+.detail-view.active{display:block;}
+
+.detail-header{display:flex;align-items:flex-start;gap:14px;margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--b1);}
+.detail-logo-wrap{width:52px;height:52px;border-radius:12px;background:var(--bg);border:1px solid var(--b1);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;}
+.detail-logo-wrap img{width:40px;height:40px;object-fit:contain;}
+.detail-title{font-size:22px;font-weight:500;color:var(--t1);margin-bottom:3px;}
+.detail-sub{font-size:13px;color:var(--t3);}
+.detail-actions{margin-left:auto;display:flex;gap:8px;align-items:center;}
+.btn-back{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--t2);background:var(--bg);border:1px solid var(--b1);border-radius:999px;padding:6px 12px;cursor:pointer;transition:all .12s;}
+.btn-back:hover{border-color:var(--b2);}
+.btn-refresh{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--t3);cursor:pointer;}
+.btn-refresh:hover{color:var(--pa);}
+
+/* ── LANG ROW ── */
+.lang-row{display:flex;gap:5px;margin-bottom:20px;align-items:center;}
+.lang-label{font-size:11px;color:var(--t4);margin-right:4px;}
+.lang-btn{font-size:11px;padding:3px 10px;border-radius:999px;border:1px solid var(--b1);background:var(--w);color:var(--t3);cursor:pointer;transition:all .12s;}
+.lang-btn.active{background:var(--p);border-color:var(--p);color:#fff;}
+
+/* ── COMPETITOR ALERT ── */
+.competitor-alert{display:flex;gap:12px;align-items:flex-start;background:var(--bearbg);border:1px solid rgba(192,57,43,.2);border-radius:var(--r10);padding:13px 15px;margin-bottom:20px;}
+.alert-icon-wrap{width:32px;height:32px;border-radius:8px;background:rgba(192,57,43,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.alert-icon-wrap i{font-size:16px;color:var(--bear);}
+.alert-body{flex:1;}
+.alert-title{font-size:12px;font-weight:500;color:var(--bear);margin-bottom:3px;text-transform:uppercase;letter-spacing:.05em;font-family:'DM Mono',monospace;}
+.alert-text{font-size:13px;color:#6B1B13;line-height:1.55;}
+.alert-meta{font-size:11px;color:var(--bear);margin-top:5px;opacity:.8;}
+
+/* ── EXEC SUMMARY ── */
+.exec-summary{background:var(--pdim);border:1px solid rgba(76,58,158,.12);border-radius:var(--r14);padding:16px 18px;margin-bottom:24px;}
+.exec-label{font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--pa);margin-bottom:8px;font-family:'DM Mono',monospace;}
+.exec-text{font-size:13px;color:var(--t1);line-height:1.75;}
+.exec-footer{display:flex;align-items:center;justify-content:space-between;margin-top:10px;}
+.exec-time{font-size:11px;color:var(--t4);}
+.exec-refresh{font-size:11px;color:var(--pa);cursor:pointer;}
+
+/* ── SECTION LABEL ── */
+.sec-label{font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--t4);margin:20px 0 10px;font-family:'DM Mono',monospace;}
+
+/* ── SIGNALS ── */
+.signals{display:flex;flex-direction:column;gap:8px;margin-bottom:4px;}
+.sig{background:var(--w);border:1px solid var(--b1);border-radius:var(--r10);padding:12px 14px;}
+.sig.biz{border-left:3px solid var(--pa);}
+.sig.news{border-left:3px solid var(--b2);}
+.sig.threat{border-left:3px solid var(--bear);}
+.sig-text{font-size:13px;color:var(--t1);line-height:1.55;margin-bottom:7px;}
+.sig-meta{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+.tag{font-size:10px;padding:2px 8px;border-radius:999px;font-weight:500;}
+.tag-biz{background:var(--pbg);color:var(--pa);}
+.tag-news{background:var(--bg);color:var(--t3);}
+.tag-threat{background:var(--bearbg);color:var(--bear);}
+.tag-date{font-size:11px;color:var(--t4);}
+.src-link{font-size:11px;color:var(--pa);display:inline-flex;align-items:center;gap:2px;}
+.src-link:hover{text-decoration:underline;}
+
+/* ── TIMELINE ── */
+.timeline{position:relative;padding-left:22px;margin-bottom:4px;}
+.timeline::before{content:'';position:absolute;left:7px;top:8px;bottom:8px;width:1px;background:var(--b1);}
+.tl-item{position:relative;padding-bottom:16px;}
+.tl-item:last-child{padding-bottom:0;}
+.tl-dot{position:absolute;left:-15px;top:5px;width:9px;height:9px;border-radius:50%;border:1.5px solid var(--b2);background:var(--w);}
+.tl-dot.upcoming{background:var(--pa);border-color:var(--pa);}
+.tl-dot.past{background:var(--b1);border-color:var(--b1);}
+.tl-date{font-size:11px;color:var(--t4);margin-bottom:2px;font-family:'DM Mono',monospace;}
+.tl-text{font-size:13px;color:var(--t1);line-height:1.4;}
+.tl-tag{display:inline-block;font-size:10px;padding:1px 7px;border-radius:999px;background:var(--bg);color:var(--t3);margin-top:3px;}
+.tl-tag.upcoming{background:var(--pbg);color:var(--pa);}
+
+/* ── INTELLIGENCE GRID ── */
+.intel-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px;}
+.intel-card{background:var(--bg);border-radius:var(--r10);padding:12px 14px;}
+.intel-label{font-size:10px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--t4);margin-bottom:5px;font-family:'DM Mono',monospace;}
+.intel-value{font-size:13px;color:var(--t1);line-height:1.5;}
+.intel-sub{font-size:11px;color:var(--t3);margin-top:3px;}
+
+/* ── TRIGGERS ── */
+.triggers{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:4px;}
+.trigger-chip{font-size:11px;padding:4px 10px;border-radius:999px;background:#FFFBEB;color:var(--warn);border:1px solid rgba(184,96,10,.2);}
+
+/* ── SOURCES ── */
+.sources-row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:4px;}
+.src-btn{display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:5px 12px;border-radius:999px;border:1px solid var(--b1);background:var(--w);color:var(--t2);transition:all .12s;}
+.src-btn:hover{border-color:var(--pa);color:var(--pa);}
+.src-btn i{font-size:14px;}
+
+/* ── DIVIDER ── */
+.div{height:1px;background:var(--b1);margin:20px 0;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- GRID VIEW -->
+  <div id="grid-view">
+    <div class="topbar">
+      <div class="logo">
+        <div class="logo-mark">
+          <svg viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" stroke="white" stroke-width="1.5"/><circle cx="9" cy="9" r="3" fill="white"/></svg>
+        </div>
+        <div class="logo-text">Nova <span>Sales Intelligence</span></div>
+      </div>
+      <div class="topbar-right">
+        <div class="profile-btn" onclick="showProfile()">
+          <div class="profile-dot"></div>
+          <span id="profile-label">james@nova.com · CMD / DMD</span>
+          <i class="ti ti-chevron-down" style="font-size:13px;color:var(--t4)"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="digest-banner">
+      <div class="digest-icon"><i class="ti ti-mail"></i></div>
+      <div class="digest-info">
+        <div class="digest-title">Weekly digest</div>
+        <div class="digest-sub">Every Sunday · Business signals for your accounts → james@nova.com</div>
+      </div>
+      <div class="toggle" onclick="toggleDigest(this)">
+        <span class="toggle-label" id="digest-label">On</span>
+        <div class="toggle-track" id="digest-track">
+          <div class="toggle-thumb"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="filter-row">
+      <span class="filter-label">Show</span>
+      <div class="filter-btn on" onclick="setFilter('all',this)">All</div>
+      <div class="filter-btn" onclick="setFilter('customer',this)">Customers</div>
+      <div class="filter-btn" onclick="setFilter('competitor',this)">Competitors</div>
+      <div class="filter-sep"></div>
+      <div class="filter-btn on" onclick="toggleProd('CMD',this)">CMD</div>
+      <div class="filter-btn on" onclick="toggleProd('DMD',this)">DMD</div>
+      <div class="filter-btn" onclick="toggleProd('MMD',this)">MMD</div>
+    </div>
+
+    <div class="section-head">Customers</div>
+    <div class="grid" id="customer-grid">
+      <div class="co-card customer" onclick="openDetail('tsmc')" data-type="customer" data-prod="CMD,DMD">
+        <div class="blink-dot new-dot" id="gdot-tsmc"></div>
+        <div class="card-logo-wrap"><img src="https://logo.clearbit.com/tsmc.com" alt="TSMC" onerror="this.parentNode.innerHTML='<span class=card-logo-fallback>TSM</span>'"></div>
+        <div class="card-name">TSMC</div>
+        <div class="card-region">Taiwan</div>
+        <div class="card-badges"><span class="badge badge-new">3 new</span></div>
+      </div>
+      <div class="co-card customer" onclick="openDetail('samsung')" data-type="customer" data-prod="CMD,DMD,MMD">
+        <div class="blink-dot alert-dot" id="gdot-samsung-a" style="right:22px"></div>
+        <div class="blink-dot new-dot" id="gdot-samsung" style="right:12px"></div>
+        <div class="card-logo-wrap"><img src="https://logo.clearbit.com/samsung.com" alt="Samsung" onerror="this.parentNode.innerHTML='<span class=card-logo-fallback>SAM</span>'"></div>
+        <div class="card-name">Samsung</div>
+        <div class="card-region">Korea</div>
+        <div class="card-badges"><span class="badge badge-new">2 new</span><span class="badge badge-alert">Alert</span></div>
+      </div>
+      <div class="co-card customer" data-type="customer" data-prod="CMD,MMD">
+        <div class="card-logo-wrap"><img src="https://logo.clearbit.com/micron.com" alt="Micron" onerror="this.parentNode.innerHTML='<span class=card-logo-fallback>MU</span>'"></div>
+        <div class="card-name">Micron</div>
+        <div class="card-region">USA</div>
+        <div class="card-badges"><span class="badge badge-ok">Up to date</span></div>
+      </div>
+      <div class="co-card customer" data-type="customer" data-prod="CMD,DMD">
+        <div class="blink-dot new-dot"></div>
+        <div class="card-logo-wrap"><img src="https://logo.clearbit.com/skhynix.com" alt="SK Hynix" onerror="this.parentNode.innerHTML='<span class=card-logo-fallback>SKH</span>'"></div>
+        <div class="card-name">SK Hynix</div>
+        <div class="card-region">Korea</div>
+        <div class="card-badges"><span class="badge badge-new">1 new</span></div>
+      </div>
+      <div class="co-card customer" data-type="customer" data-prod="DMD,MMD">
+        <div class="card-logo-wrap"><img src="https://logo.clearbit.com/intel.com" alt="Intel" onerror="this.parentNode.innerHTML='<span class=card-logo-fallback>INTC</span>'"></div>
+        <div class="card-name">Intel</div>
+        <div class="card-region">USA</div>
+        <div class="card-badges"><span class="badge badge-ok">Up to date</span></div>
+      </div>
+      <div class="co-card customer" data-type="customer" data-prod="CMD">
+        <div class="card-logo-wrap"><img src="https://logo.clearbit.com/smics.com" alt="SMIC" onerror="this.parentNode.innerHTML='<span class=card-logo-fallback>SMIC</span>'"></div>
+        <div class="card-name">SMIC</div>
+        <div class="card-region">China</div>
+        <div class="card-badges"><span class="badge badge-ok">Up to date</span></div>
+      </div>
+    </div>
+
+    <div class="section-head">Competitors</div>
+    <div class="grid" id="competitor-grid">
+      <div class="co-card competitor" data-type="competitor" data-prod="CMD,DMD">
+        <div class="blink-dot new-dot"></div>
+        <div class="card-logo-wrap"><img src="https://logo.clearbit.com/kla.com" alt="KLA" onerror="this.parentNode.innerHTML='<span class=card-logo-fallback>KLAC</span>'"></div>
+        <div class="card-name">KLA</div>
+        <div class="card-region">USA</div>
+        <div class="card-badges"><span class="badge badge-new">2 new</span></div>
+      </div>
+      <div class="co-card competitor" data-type="competitor" data-prod="CMD,MMD">
+        <div class="card-logo-wrap"><img src="https://logo.clearbit.com/appliedmaterials.com" alt="AMAT" onerror="this.parentNode.innerHTML='<span class=card-logo-fallback>AMAT</span>'"></div>
+        <div class="card-name">Applied Materials</div>
+        <div class="card-region">USA</div>
+        <div class="card-badges"><span class="badge badge-ok">Up to date</span></div>
+      </div>
+      <div class="co-card competitor" data-type="competitor" data-prod="CMD">
+        <div class="blink-dot new-dot"></div>
+        <div class="card-logo-wrap"><img src="https://logo.clearbit.com/asml.com" alt="ASML" onerror="this.parentNode.innerHTML='<span class=card-logo-fallback>ASML</span>'"></div>
+        <div class="card-name">ASML</div>
+        <div class="card-region">Netherlands</div>
+        <div class="card-badges"><span class="badge badge-new">1 new</span></div>
+      </div>
+      <div class="co-card competitor" data-type="competitor" data-prod="CMD,DMD">
+        <div class="card-logo-wrap"><img src="https://logo.clearbit.com/lamresearch.com" alt="Lam Research" onerror="this.parentNode.innerHTML='<span class=card-logo-fallback>LRCX</span>'"></div>
+        <div class="card-name">Lam Research</div>
+        <div class="card-region">USA</div>
+        <div class="card-badges"><span class="badge badge-ok">Up to date</span></div>
+      </div>
+      <div class="co-card competitor" data-type="competitor" data-prod="CMD,DMD">
+        <div class="card-logo-wrap"><img src="https://logo.clearbit.com/ontoinnovation.com" alt="Onto" onerror="this.parentNode.innerHTML='<span class=card-logo-fallback>ONTO</span>'"></div>
+        <div class="card-name">Onto Innovation</div>
+        <div class="card-region">USA</div>
+        <div class="card-badges"><span class="badge badge-ok">Up to date</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DETAIL: TSMC -->
+  <div class="detail-view" id="detail-tsmc">
+    <div class="detail-header">
+      <div class="detail-logo-wrap"><img src="https://logo.clearbit.com/tsmc.com" alt="TSMC" onerror="this.parentNode.innerHTML='TSMC'"></div>
+      <div>
+        <div class="detail-title">TSMC</div>
+        <div class="detail-sub">Customer · Taiwan · Semiconductor foundry</div>
+      </div>
+      <div class="detail-actions">
+        <div class="btn-refresh" onclick="refreshDetail('tsmc')"><i class="ti ti-refresh" style="font-size:13px"></i> Refresh</div>
+        <div class="btn-back" onclick="goBack()"><i class="ti ti-arrow-left" style="font-size:13px"></i> Back</div>
+      </div>
+    </div>
+
+    <div class="lang-row">
+      <span class="lang-label">Language</span>
+      <div class="lang-btn active">EN</div>
+      <div class="lang-btn">한국어</div>
+      <div class="lang-btn">日本語</div>
+      <div class="lang-btn">中文</div>
+    </div>
+
+    <div class="competitor-alert" id="alerts-tsmc" style="display:none">
+      <div class="alert-icon-wrap"><i class="ti ti-alert-triangle"></i></div>
+      <div class="alert-body"><div class="alert-title">Competitor alert</div><div class="alert-text"></div><div class="alert-meta"><a class="alert-src-link src-link" href="#" target="_blank" style="display:none">Source ↗</a></div></div>
+    </div>
+    <div class="exec-summary">
+      <div class="exec-label">Today's summary</div>
+      <div class="exec-text" id="exec-text-tsmc">TSMC confirmed $38B capex for 2026 with N2 ramp ahead of schedule — a direct signal for Nova optical CD and overlay demand at leading-edge nodes. CoWoS advanced packaging capacity is doubling in H2, creating an immediate window for film metrology. Four consecutive earnings beats reinforce a healthy investment cycle with no signs of slowdown.</div>
+      <div class="exec-footer">
+        <span class="exec-time" id="exec-time-tsmc">Updated today · 08:14 AM</span>
+        <span class="exec-refresh" onclick="refreshDetail('tsmc')">Refresh ↻</span>
+      </div>
+    </div>
+
+    <div class="sec-label">Business signals</div>
+    <div class="signals" id="signals-biz-tsmc">
+      <div class="sig biz">
+        <div class="sig-text">$38B capex confirmed for 2026 — N2 ramp ahead of schedule, capacity expanding in Arizona and Kaohsiung.</div>
+        <div class="sig-meta"><span class="tag tag-biz">Capex</span><span class="tag-date">Jun 5</span><a href="https://reuters.com" target="_blank" class="src-link">Reuters <i class="ti ti-external-link" style="font-size:10px"></i></a></div>
+      </div>
+      <div class="sig biz">
+        <div class="sig-text">CoWoS advanced packaging capacity doubling in H2 2026 — overlay and film metrology demand expected to rise significantly.</div>
+        <div class="sig-meta"><span class="tag tag-biz">Packaging</span><span class="tag-date">Jun 3</span><a href="https://digitimes.com" target="_blank" class="src-link">DigiTimes <i class="ti ti-external-link" style="font-size:10px"></i></a></div>
+      </div>
+      <div class="sig biz">
+        <div class="sig-text">Q1 2026 EPS beat 4.4% — four consecutive quarters of outperformance signal continued capex strength.</div>
+        <div class="sig-meta"><span class="tag tag-biz">Earnings</span><span class="tag-date">Apr 17</span><a href="https://sec.gov" target="_blank" class="src-link">SEC 20-F <i class="ti ti-external-link" style="font-size:10px"></i></a></div>
+      </div>
+    </div>
+
+    <div class="sec-label">Industry news</div>
+    <div class="signals" id="signals-news-tsmc">
+      <div class="sig news">
+        <div class="sig-text">TSMC named world's most valuable semiconductor company for third consecutive year as AI chip demand surges.</div>
+        <div class="sig-meta"><span class="tag tag-news">News</span><span class="tag-date">Jun 6</span><a href="https://bloomberg.com" target="_blank" class="src-link">Bloomberg <i class="ti ti-external-link" style="font-size:10px"></i></a></div>
+      </div>
+      <div class="sig news">
+        <div class="sig-text">Taiwan strengthening role as global AI and semiconductor hub — international partnerships with US startups expanding rapidly.</div>
+        <div class="sig-meta"><span class="tag tag-news">Industry</span><span class="tag-date">Jun 4</span><a href="https://digitimes.com" target="_blank" class="src-link">DigiTimes Asia <i class="ti ti-external-link" style="font-size:10px"></i></a></div>
+      </div>
+    </div>
+
+    <div class="div"></div>
+
+    <div class="sec-label">Event timeline</div>
+    <div class="timeline" id="timeline-tsmc">
+      <div class="tl-item">
+        <div class="tl-dot upcoming"></div>
+        <div class="tl-date">Jul 17, 2026</div>
+        <div class="tl-text">Q2 2026 Earnings Call</div>
+        <span class="tl-tag upcoming">Upcoming</span>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot upcoming"></div>
+        <div class="tl-date">Sep 9–12, 2026</div>
+        <div class="tl-text">SEMICON Taiwan — TSMC keynote expected</div>
+        <span class="tl-tag upcoming">Upcoming</span>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot past"></div>
+        <div class="tl-date">Apr 17, 2026</div>
+        <div class="tl-text">Q1 2026 Earnings — EPS beat 4.4%</div>
+        <span class="tl-tag">Past</span>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot past"></div>
+        <div class="tl-date">Jan 16, 2026</div>
+        <div class="tl-text">Q4 2025 Earnings — EPS beat 5.2%</div>
+        <span class="tl-tag">Past</span>
+      </div>
+    </div>
+
+    <div class="sec-label">Sales triggers</div>
+    <div class="triggers">
+      <span class="trigger-chip">N2 node ramp requires enhanced CD metrology</span>
+      <span class="trigger-chip">Four consecutive capex beats signal sustained investment</span>
+      <span class="trigger-chip">CoWoS expansion drives packaging inspection demand</span>
+    </div>
+
+    <div class="sec-label">Intelligence</div>
+    <div class="intel-grid">
+      <div class="intel-card">
+        <div class="intel-label">Revenue outlook</div>
+        <div class="intel-value">Growing</div>
+        <div class="intel-sub">29 Buy · 2 Hold · 0 Sell</div>
+      </div>
+      <div class="intel-card">
+        <div class="intel-label">Capex guidance</div>
+        <div class="intel-value">$38B confirmed 2026</div>
+        <div class="intel-sub">Up from $32B in 2025</div>
+      </div>
+      <div class="intel-card">
+        <div class="intel-label">Metrology mentions</div>
+        <div class="intel-value">Process control, overlay accuracy, CD measurement</div>
+      </div>
+      <div class="intel-card">
+        <div class="intel-label">M&A activity</div>
+        <div class="intel-value">No significant deals</div>
+        <div class="intel-sub">Focus on organic expansion</div>
+      </div>
+    </div>
+
+    <div class="sec-label">Sources</div>
+    <div class="sources-row">
+      <a href="https://investor.tsmc.com/english" target="_blank" class="src-btn"><i class="ti ti-building"></i> Investor Relations</a>
+      <a href="https://seekingalpha.com/symbol/TSM/earnings/transcripts" target="_blank" class="src-btn"><i class="ti ti-microphone"></i> Earnings Calls</a>
+      <a href="https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001046179&type=20-F" target="_blank" class="src-btn"><i class="ti ti-file-text"></i> SEC Filings</a>
+      <a href="https://seekingalpha.com/symbol/TSM/earnings/transcripts" target="_blank" class="src-btn"><i class="ti ti-news"></i> SA Transcripts</a>
+    </div>
+  </div>
+
+  <!-- DETAIL: SAMSUNG -->
+  <div class="detail-view" id="detail-samsung">
+    <div class="detail-header">
+      <div class="detail-logo-wrap"><img src="https://logo.clearbit.com/samsung.com" alt="Samsung" onerror="this.parentNode.innerHTML='SAM'"></div>
+      <div>
+        <div class="detail-title">Samsung</div>
+        <div class="detail-sub">Customer · Korea · Memory &amp; foundry</div>
+      </div>
+      <div class="detail-actions">
+        <div class="btn-refresh"><i class="ti ti-refresh" style="font-size:13px"></i> Refresh</div>
+        <div class="btn-back" onclick="goBack()"><i class="ti ti-arrow-left" style="font-size:13px"></i> Back</div>
+      </div>
+    </div>
+
+    <div class="lang-row">
+      <span class="lang-label">Language</span>
+      <div class="lang-btn active">EN</div>
+      <div class="lang-btn">한국어</div>
+      <div class="lang-btn">日本語</div>
+      <div class="lang-btn">中文</div>
+    </div>
+
+    <div class="competitor-alert" id="alerts-samsung">
+      <div class="alert-icon-wrap"><i class="ti ti-alert-triangle"></i></div>
+      <div class="alert-body">
+        <div class="alert-title">Competitor alert</div>
+        <div class="alert-text">KLA announced a new CD-SEM series targeting HBM4 nodes — directly overlapping Nova's CMD portfolio at this account. Immediate attention recommended.</div>
+        <div class="alert-meta">KLA · Jun 4, 2026 · <a href="https://eetimes.com" target="_blank" style="color:var(--bear);">EE Times ↗</a></div>
+      </div>
+    </div>
+
+    <div class="exec-summary">
+      <div class="exec-label">Today's summary</div>
+      <div class="exec-text" id="exec-text-samsung">Samsung is accelerating HBM4 qualification under yield pressure — a direct opening for Nova overlay metrology at Hwaseong. KLA's new CD-SEM announcement requires immediate attention at this account. Foundry 2nm expansion is on track for H2 with process control budget decisions expected in Q3 2026.</div>
+      <div class="exec-footer">
+        <span class="exec-time" id="exec-time-samsung">Updated today · 08:14 AM</span>
+        <span class="exec-refresh" onclick="refreshDetail('samsung')">Refresh ↻</span>
+      </div>
+    </div>
+
+    <div class="sec-label">Business signals</div>
+    <div class="signals" id="signals-biz-samsung">
+      <div class="sig biz">
+        <div class="sig-text">HBM4 qualification accelerating — yield improvement pressure signals increased overlay metrology demand at Hwaseong fab.</div>
+        <div class="sig-meta"><span class="tag tag-biz">Technology</span><span class="tag-date">Jun 3</span><a href="https://thelec.net" target="_blank" class="src-link">The Elec <i class="ti ti-external-link" style="font-size:10px"></i></a></div>
+      </div>
+      <div class="sig biz">
+        <div class="sig-text">Foundry 2nm capacity expansion confirmed for H2 2026 — process control investment cycle begins Q3.</div>
+        <div class="sig-meta"><span class="tag tag-biz">Capex</span><span class="tag-date">May 28</span><a href="https://digitimes.com" target="_blank" class="src-link">DigiTimes <i class="ti ti-external-link" style="font-size:10px"></i></a></div>
+      </div>
+    </div>
+
+    <div class="sec-label">Industry news</div>
+    <div class="signals" id="signals-news-samsung">
+      <div class="sig news">
+        <div class="sig-text">Samsung joins Nvidia AI factory initiative — advanced packaging collaboration expanding in South Korea.</div>
+        <div class="sig-meta"><span class="tag tag-news">News</span><span class="tag-date">Jun 4</span><a href="https://bloomberg.com" target="_blank" class="src-link">Bloomberg <i class="ti ti-external-link" style="font-size:10px"></i></a></div>
+      </div>
+    </div>
+
+    <div class="div"></div>
+
+    <div class="sec-label">Event timeline</div>
+    <div class="timeline" id="timeline-samsung">
+      <div class="tl-item">
+        <div class="tl-dot upcoming"></div>
+        <div class="tl-date">Jul 31, 2026</div>
+        <div class="tl-text">Q2 2026 Earnings Call</div>
+        <span class="tl-tag upcoming">Upcoming</span>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot upcoming"></div>
+        <div class="tl-date">Aug 2026</div>
+        <div class="tl-text">HBM4 mass production decision expected</div>
+        <span class="tl-tag upcoming">Upcoming</span>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot past"></div>
+        <div class="tl-date">Apr 30, 2026</div>
+        <div class="tl-text">Q1 2026 Earnings — revenue +12% YoY</div>
+        <span class="tl-tag">Past</span>
+      </div>
+    </div>
+
+    <div class="sec-label">Sales triggers</div>
+    <div class="triggers">
+      <span class="trigger-chip">HBM4 yield pressure requires advanced overlay metrology</span>
+      <span class="trigger-chip">2nm node qualification drives CD measurement demand</span>
+    </div>
+
+    <div class="sec-label">Sources</div>
+    <div class="sources-row">
+      <a href="https://www.samsung.com/global/ir/" target="_blank" class="src-btn"><i class="ti ti-building"></i> Investor Relations</a>
+      <a href="https://seekingalpha.com/symbol/SSNLF/earnings/transcripts" target="_blank" class="src-btn"><i class="ti ti-microphone"></i> Earnings Calls</a>
+      <a href="https://seekingalpha.com/symbol/SSNLF/earnings/transcripts" target="_blank" class="src-btn"><i class="ti ti-news"></i> SA Transcripts</a>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const SEEN_KEY='nova_seen_details';
+let seen=JSON.parse(localStorage.getItem(SEEN_KEY)||'{}');
+
+function openDetail(id){
+  document.getElementById('grid-view').style.display='none';
+  document.querySelectorAll('.detail-view').forEach(d=>d.classList.remove('active'));
+  const d=document.getElementById('detail-'+id);
+  if(d)d.classList.add('active');
+  if(!seen[id]){
+    setTimeout(()=>{
+      const dot=document.getElementById('gdot-'+id);
+      const adot=document.getElementById('gdot-'+id+'-a');
+      if(dot)dot.style.display='none';
+      if(adot)adot.style.display='none';
+      seen[id]=Date.now();
+      localStorage.setItem(SEEN_KEY,JSON.stringify(seen));
+    },3000);
+  }
+  window.scrollTo(0,0);
+}
+
+function goBack(){
+  document.getElementById('grid-view').style.display='block';
+  document.querySelectorAll('.detail-view').forEach(d=>d.classList.remove('active'));
+  window.scrollTo(0,0);
+}
+
+function refreshDetail(id){
+  alert('Refreshing '+id+' — fetching latest signals...');
+}
+
+function toggleDigest(el){
+  const track=document.getElementById('digest-track');
+  const label=document.getElementById('digest-label');
+  const isOn=!track.classList.contains('off');
+  track.classList.toggle('off',isOn);
+  label.textContent=isOn?'Off':'On';
+}
+
+function setFilter(type,btn){
+  document.querySelectorAll('.filter-row .filter-btn').slice(0,3).forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+}
+
+function toggleProd(prod,btn){
+  btn.classList.toggle('on');
+}
+
+function showProfile(){}
+
+document.querySelectorAll('.lang-btn').forEach(btn=>{
+  btn.addEventListener('click',function(){
+    this.closest('.lang-row').querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+</script>
+</body>
+</html>
+<!-- LIVE DATA LAYER -->
+<script>
+const WORKER = 'https://nova-proxy.yuvalbloomberg.workers.dev';
+const CACHE_TTL = 6 * 60 * 60 * 1000; // 6 hours
+
+const COMPANIES = {
+  // Customers
+  tsmc:    { ticker:'TSM',   name:'TSMC',             type:'customer',  region:'Taiwan',      products:['CMD','DMD'],       cik:'0001046179', ir:'https://investor.tsmc.com/english' },
+  samsung: { ticker:'SSNLF', name:'Samsung',           type:'customer',  region:'Korea',       products:['CMD','DMD','MMD'], cik:null,         ir:'https://www.samsung.com/global/ir/' },
+  micron:  { ticker:'MU',    name:'Micron',            type:'customer',  region:'USA',         products:['CMD','MMD'],       cik:'0000723125', ir:'https://investors.micron.com' },
+  skhynix: { ticker:'HXSCL', name:'SK Hynix',          type:'customer',  region:'Korea',       products:['CMD','DMD'],       cik:null,         ir:'https://www.skhynix.com/ir/' },
+  intel:   { ticker:'INTC',  name:'Intel',             type:'customer',  region:'USA',         products:['DMD','MMD'],       cik:'0000050863', ir:'https://www.intc.com/investor-relations' },
+  smic:    { ticker:'SMH',   name:'SMIC',              type:'customer',  region:'China',       products:['CMD'],             cik:null,         ir:'https://www.smics.com/en/site/company_ir' },
+  // Competitors
+  kla:     { ticker:'KLAC',  name:'KLA',               type:'competitor',region:'USA',         products:['CMD','DMD'],       cik:'0000319201', ir:'https://ir.kla.com' },
+  amat:    { ticker:'AMAT',  name:'Applied Materials', type:'competitor',region:'USA',         products:['CMD','MMD'],       cik:'0000796343', ir:'https://ir.appliedmaterials.com' },
+  asml:    { ticker:'ASML',  name:'ASML',              type:'competitor',region:'Netherlands', products:['CMD'],             cik:'0000937966', ir:'https://www.asml.com/en/investors' },
+  lam:     { ticker:'LRCX',  name:'Lam Research',      type:'competitor',region:'USA',         products:['CMD','DMD'],       cik:'0000707549', ir:'https://ir.lamresearch.com' },
+  onto:    { ticker:'ONTO',  name:'Onto Innovation',   type:'competitor',region:'USA',         products:['CMD','DMD'],       cik:'0001113232', ir:'https://ir.ontoinnovation.com' },
+};
+
+// ── CACHE ──
+function getCache(key) {
+  try {
+    const c = JSON.parse(localStorage.getItem(key) || 'null');
+    if (c && (Date.now() - c.ts) < CACHE_TTL) return c.data;
+  } catch {}
+  return null;
+}
+function setCache(key, data) {
+  try { localStorage.setItem(key, JSON.stringify({ ts: Date.now(), data })); } catch {}
+}
+
+// ── API HELPERS ──
+async function workerGet(path) {
+  const r = await fetch(WORKER + path);
+  if (!r.ok) throw new Error(`Worker error ${r.status}`);
+  return r.json();
+}
+async function workerPost(path, body) {
+  const r = await fetch(WORKER + path, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+  if (!r.ok) throw new Error(`Worker error ${r.status}`);
+  return r.json();
+}
+
+// ── LOAD COMPANY DETAIL ──
+async function loadCompanyData(id, forceRefresh = false) {
+  const co = COMPANIES[id];
+  if (!co) return;
+
+  const cacheKey = `nova_sales_${id}_v2`;
+  if (!forceRefresh) {
+    const cached = getCache(cacheKey);
+    if (cached) { renderDetail(id, co, cached); return; }
+  }
+
+  // Show loading states
+  updateExecSummary(id, null, true);
+  updateSignals(id, null, true);
+
+  try {
+    // Parallel: news + earnings + competitor alerts
+    const [newsData, earningsData, alertData] = await Promise.all([
+      workerGet(`/news?ticker=${co.ticker}&company=${encodeURIComponent(co.name)}&days=30`),
+      workerGet(`/earnings-dates?ticker=${co.ticker}`),
+      co.type === 'customer'
+        ? workerGet(`/competitor-alert?customer=${co.ticker}&products=${co.products.join(',')}`)
+        : Promise.resolve({ alerts: [] }),
+    ]);
+
+    // Generate AI summary
+    const summaryData = await workerPost('/company-summary', {
+      ticker: co.ticker,
+      name: co.name,
+      type: co.type,
+      news: newsData.news || [],
+      earnings: earningsData.past || [],
+      products: co.products,
+    });
+
+    const compiled = {
+      news: newsData.news || [],
+      earnings: earningsData,
+      alerts: alertData.alerts || [],
+      summary: summaryData.summary || '',
+      updatedAt: new Date().toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' }),
+    };
+
+    setCache(cacheKey, compiled);
+    renderDetail(id, co, compiled);
+  } catch (e) {
+    console.error('loadCompanyData error', e);
+    updateExecSummary(id, 'Could not load data. Try refreshing.', false);
+  }
+}
+
+// ── RENDER DETAIL ──
+function renderDetail(id, co, data) {
+  // Executive summary
+  const summaryEl = document.getElementById(`exec-text-${id}`);
+  const timeEl = document.getElementById(`exec-time-${id}`);
+  if (summaryEl) summaryEl.textContent = data.summary || 'Analysis unavailable.';
+  if (timeEl) timeEl.textContent = `Updated today · ${data.updatedAt || '—'}`;
+
+  // Competitor alerts
+  renderAlerts(id, co, data.alerts || []);
+
+  // Signals from news
+  renderNewsSignals(id, co, data.news || []);
+
+  // Timeline from earnings
+  renderTimeline(id, data.earnings || {});
+}
+
+function updateExecSummary(id, text, loading) {
+  const el = document.getElementById(`exec-text-${id}`);
+  if (!el) return;
+  if (loading) el.innerHTML = '<i class="ti ti-loader" style="animation:spin .8s linear infinite;display:inline-block"></i> Generating summary...';
+  else if (text) el.textContent = text;
+}
+
+function updateSignals(id, signals, loading) {
+  const el = document.getElementById(`signals-biz-${id}`);
+  if (!el) return;
+  if (loading) el.innerHTML = '<div style="color:var(--t4);font-size:12px;padding:8px 0;">Loading signals...</div>';
+}
+
+function renderAlerts(id, co, alerts) {
+  const el = document.getElementById(`alerts-${id}`);
+  if (!el) return;
+  if (!alerts.length) { el.style.display = 'none'; return; }
+  el.style.display = 'flex';
+  const a = alerts[0];
+  el.querySelector('.alert-text').textContent =
+    `${a.competitor} announced activity overlapping Nova's ${co.products.join('/')} portfolio at this account. Immediate attention recommended.`;
+  el.querySelector('.alert-meta').textContent =
+    `${a.competitor} · ${a.latest?.date || ''} · ${a.latest?.source || ''}`;
+  if (a.latest?.url) {
+    const link = el.querySelector('.alert-src-link');
+    if (link) { link.href = a.latest.url; link.style.display = 'inline'; }
+  }
+}
+
+function renderNewsSignals(id, co, news) {
+  if (!news.length) return;
+
+  // Ask Claude to classify news into Business Signals vs Industry News
+  workerPost('/anthropic', {
+    model: 'claude-sonnet-4-5',
+    max_tokens: 1200,
+    messages: [{
+      role: 'user',
+      content: `Classify these news items for Nova Ltd. sales team about ${co.name} (${co.type}).
+Nova products: ${co.products.join(', ')}.
+For each item, classify as:
+- "biz": direct business signal (capex, node transition, metrology need, earnings, product ramp)
+- "news": industry news (interesting but no immediate action needed)
+- "skip": not relevant
+
+Also extract the Nova angle for "biz" items (1 short sentence).
+
+News items (JSON):
+${JSON.stringify(news.slice(0, 12).map((n,i) => ({ id:i, headline:n.headline, date:n.date, source:n.source, url:n.url })))}
+
+Respond ONLY with JSON array: [{id, type, novaAngle}]. No markdown.`
+    }]
+  }).then(d => {
+    const raw = d.content?.find(b => b.type === 'text')?.text || '[]';
+    let classified;
+    try { classified = JSON.parse(raw.replace(/```json|```/g, '').trim()); } catch { return; }
+
+    const bizEl = document.getElementById(`signals-biz-${id}`);
+    const newsEl = document.getElementById(`signals-news-${id}`);
+    if (!bizEl || !newsEl) return;
+
+    const biz = [], newsItems = [];
+    classified.forEach(c => {
+      const item = news[c.id];
+      if (!item) return;
+      if (c.type === 'biz') biz.push({ ...item, novaAngle: c.novaAngle });
+      else if (c.type === 'news') newsItems.push(item);
+    });
+
+    bizEl.innerHTML = biz.slice(0, 4).map(n => `
+      <div class="sig biz">
+        <div class="sig-text">${n.headline}</div>
+        ${n.novaAngle ? `<div style="font-size:11px;color:var(--pa);font-style:italic;margin-bottom:6px;">→ ${n.novaAngle}</div>` : ''}
+        <div class="sig-meta">
+          <span class="tag tag-biz">Signal</span>
+          <span class="tag-date">${n.date}</span>
+          ${n.url ? `<a href="${n.url}" target="_blank" class="src-link">${n.source || 'Source'} <i class="ti ti-external-link" style="font-size:10px"></i></a>` : ''}
+        </div>
+      </div>`).join('') || '<div style="color:var(--t4);font-size:12px;padding:8px 0;">No business signals detected.</div>';
+
+    newsEl.innerHTML = newsItems.slice(0, 3).map(n => `
+      <div class="sig news">
+        <div class="sig-text">${n.headline}</div>
+        <div class="sig-meta">
+          <span class="tag tag-news">News</span>
+          <span class="tag-date">${n.date}</span>
+          ${n.url ? `<a href="${n.url}" target="_blank" class="src-link">${n.source || 'Source'} <i class="ti ti-external-link" style="font-size:10px"></i></a>` : ''}
+        </div>
+      </div>`).join('') || '<div style="color:var(--t4);font-size:12px;padding:8px 0;">No recent news.</div>';
+
+  }).catch(console.error);
+}
+
+function renderTimeline(id, earnings) {
+  const el = document.getElementById(`timeline-${id}`);
+  if (!el) return;
+  const past = (earnings.past || []).slice(0, 3);
+  const upcoming = (earnings.upcoming || []).slice(0, 2);
+  const items = [
+    ...upcoming.map(e => ({ date: e.date, text: `Earnings Call${e.period ? ' — ' + e.period : ''}`, type: 'upcoming', tag: 'Upcoming' })),
+    ...past.map(e => ({
+      date: e.date,
+      text: `Earnings${e.period ? ' ' + e.period : ''}${e.eps != null ? ' — EPS ' + e.eps + (e.surprise != null ? ' (' + (e.surprise > 0 ? '+' : '') + e.surprise.toFixed(1) + '%)' : '') : ''}`,
+      type: 'past',
+      tag: 'Past'
+    })),
+  ].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  el.innerHTML = items.map(item => `
+    <div class="tl-item">
+      <div class="tl-dot ${item.type}"></div>
+      <div class="tl-date">${item.date}</div>
+      <div class="tl-text">${item.text}</div>
+      <span class="tl-tag ${item.type === 'upcoming' ? 'upcoming' : ''}">${item.tag}</span>
+    </div>`).join('') || '<div style="color:var(--t4);font-size:12px;">No timeline data available.</div>';
+}
+
+// ── OVERRIDE openDetail to load live data ──
+const _openDetailStatic = openDetail;
+function openDetail(id) {
+  _openDetailStatic(id);
+  loadCompanyData(id);
+}
+
+// ── REFRESH ──
+function refreshDetail(id) {
+  loadCompanyData(id, true);
+}
+
+// Add spin animation
+const style = document.createElement('style');
+style.textContent = '@keyframes spin{to{transform:rotate(360deg);}}';
+document.head.appendChild(style);
+</script>
