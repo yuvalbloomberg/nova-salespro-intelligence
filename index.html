@@ -536,7 +536,7 @@ a{text-decoration:none;color:inherit;}
 const SEEN_KEY='nova_seen_details';
 let seen=JSON.parse(localStorage.getItem(SEEN_KEY)||'{}');
 
-function openDetail(id){
+function openDetailStatic(id){
   document.getElementById('grid-view').style.display='none';
   document.querySelectorAll('.detail-view').forEach(d=>d.classList.remove('active'));
   const d=document.getElementById('detail-'+id);
@@ -573,8 +573,15 @@ function toggleDigest(el){
 }
 
 function setFilter(type,btn){
-  document.querySelectorAll('.filter-row .filter-btn').slice(0,3).forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('.filter-btn').forEach(b=>{
+    if(['All','Customers','Competitors'].includes(b.textContent.trim()))b.classList.remove('on');
+  });
   btn.classList.add('on');
+  const cards=document.querySelectorAll('.co-card');
+  cards.forEach(c=>{
+    if(type==='all')c.style.display='';
+    else c.style.display=c.dataset.type===type?'':'none';
+  });
 }
 
 function toggleProd(prod,btn){
@@ -823,10 +830,9 @@ function renderTimeline(id, earnings) {
     </div>`).join('') || '<div style="color:var(--t4);font-size:12px;">No timeline data available.</div>';
 }
 
-// ── OVERRIDE openDetail to load live data ──
-const _openDetailStatic = openDetail;
+// ── openDetail loads static UI then live data ──
 function openDetail(id) {
-  _openDetailStatic(id);
+  openDetailStatic(id);
   loadCompanyData(id);
 }
 
