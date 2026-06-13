@@ -1,4 +1,4 @@
-<!-- Nova Sales Intelligence — v3.3 | 2026-06-13 | Competitor alert timeout fix, all cards always visible -->
+<!-- Nova Sales Intelligence — v3.4 | 2026-06-13 | Competitor alert timeout fix, all cards always visible -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -201,7 +201,7 @@ a{text-decoration:none;color:inherit;}
           <svg viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" stroke="white" stroke-width="1.5"/><circle cx="9" cy="9" r="3" fill="white"/></svg>
         </div>
         <div class="logo-text">Nova <span>Sales Intelligence</span></div>
-        <div style="font-size:10px;font-weight:500;color:var(--t4);font-family:'DM Mono',monospace;background:var(--bg);border:1px solid var(--b1);border-radius:4px;padding:2px 6px;margin-left:8px;letter-spacing:.04em;">v3.3</div>
+        <div style="font-size:10px;font-weight:500;color:var(--t4);font-family:'DM Mono',monospace;background:var(--bg);border:1px solid var(--b1);border-radius:4px;padding:2px 6px;margin-left:8px;letter-spacing:.04em;">v3.4</div>
       </div>
       <div class="topbar-right">
         <div class="profile-btn" onclick="showProfile()">
@@ -398,8 +398,10 @@ a{text-decoration:none;color:inherit;}
       <div id="dyn-deep-intel"><div style="color:var(--t4);font-size:12px;padding:8px 0;"><i class="ti ti-loader" style="animation:spin .8s linear infinite;display:inline-block"></i> Running deep scan...</div></div>
     </div>
 
-  <!-- PROFILE MODAL -->
-  <div id="profile-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.35);z-index:100;align-items:center;justify-content:center;">
+</div><!-- end .app -->
+
+<!-- PROFILE MODAL -->
+<div id="profile-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.35);z-index:100;align-items:center;justify-content:center;">
     <div style="background:var(--w);border-radius:var(--r20);padding:32px;max-width:480px;width:90%;max-height:90vh;overflow-y:auto;">
       <div style="font-size:20px;font-weight:500;color:var(--t1);margin-bottom:6px;" id="modal-title">Welcome to Nova Sales Intelligence</div>
       <div style="font-size:13px;color:var(--t3);margin-bottom:24px;" id="modal-sub">Set up your profile to personalize your dashboard</div>
@@ -444,9 +446,6 @@ a{text-decoration:none;color:inherit;}
     </div>
   </div>
 
-</div><!-- end .app -->
-</body>
-</html>
 <script>
 // ── FILTER SYSTEM ──
 let activeTypeFilter = 'all';
@@ -516,23 +515,32 @@ async function translateCurrentView(lang) {
   const summaryEl = document.getElementById('dyn-exec-text');
   const bizEl = document.getElementById('dyn-signals-biz');
   const newsEl = document.getElementById('dyn-signals-news');
+  const deepEl = document.getElementById('dyn-deep-intel');
+
   const summaryText = summaryEl?.textContent || '';
   const bizTexts = [...(bizEl?.querySelectorAll('.sig-text')||[])].map(el=>el.textContent).join('\n---\n');
   const newsTexts = [...(newsEl?.querySelectorAll('.sig-text')||[])].map(el=>el.textContent).join('\n---\n');
-  if (!summaryText || summaryText.includes('Loading') || summaryText.includes('Generating')) return;
+  // Deep intel: translate titles and insights
+  const deepTitles = [...(deepEl?.querySelectorAll('[style*="font-weight:500"]')||[])].map(el=>el.textContent).join('\n---\n');
+  const deepInsights = [...(deepEl?.querySelectorAll('[style*="color:var(--t2)"]')||[])].map(el=>el.textContent).join('\n---\n');
 
+  if (!summaryText || summaryText.includes('Loading') || summaryText.includes('Generating')) return;
   if (summaryEl) summaryEl.innerHTML = '<i class="ti ti-loader" style="animation:spin .8s linear infinite;display:inline-block"></i> Translating...';
 
   try {
-    const [sumR, bizR, newsR] = await Promise.all([
+    const [sumR, bizR, newsR, deepTitleR, deepInsightR] = await Promise.all([
       summaryText ? workerPost('/translate',{content:summaryText,targetLang:lang,company:co.name,type:'executive summary'}) : Promise.resolve({translated:''}),
       bizTexts    ? workerPost('/translate',{content:bizTexts,   targetLang:lang,company:co.name,type:'business signals'})  : Promise.resolve({translated:''}),
       newsTexts   ? workerPost('/translate',{content:newsTexts,  targetLang:lang,company:co.name,type:'industry news'})     : Promise.resolve({translated:''}),
+      deepTitles  ? workerPost('/translate',{content:deepTitles, targetLang:lang,company:co.name,type:'intelligence headlines'}) : Promise.resolve({translated:''}),
+      deepInsights? workerPost('/translate',{content:deepInsights,targetLang:lang,company:co.name,type:'competitive insights'})  : Promise.resolve({translated:''}),
     ]);
     const translation = {
       summary: sumR.translated || summaryText,
       bizSignals: bizR.translated ? bizR.translated.split('\n---\n') : [],
       newsSignals: newsR.translated ? newsR.translated.split('\n---\n') : [],
+      deepTitles: deepTitleR.translated ? deepTitleR.translated.split('\n---\n') : [],
+      deepInsights: deepInsightR.translated ? deepInsightR.translated.split('\n---\n') : [],
     };
     setCache(tCacheKey, translation);
     applyTranslation(translation);
@@ -551,6 +559,18 @@ function applyTranslation(t) {
   if (newsEl && t.newsSignals?.length) {
     const cards = newsEl.querySelectorAll('.sig-text');
     t.newsSignals.forEach((text,i) => { if(cards[i]&&text.trim()) cards[i].textContent=text.trim(); });
+  }
+  // Deep intel translation
+  const deepEl = document.getElementById('dyn-deep-intel');
+  if (deepEl) {
+    if (t.deepTitles?.length) {
+      const titles = deepEl.querySelectorAll('[style*="font-weight:500"]');
+      t.deepTitles.forEach((text,i) => { if(titles[i]&&text.trim()) titles[i].textContent=text.trim(); });
+    }
+    if (t.deepInsights?.length) {
+      const insights = deepEl.querySelectorAll('[style*="color:var(--t2)"]');
+      t.deepInsights.forEach((text,i) => { if(insights[i]&&text.trim()) insights[i].textContent=text.trim(); });
+    }
   }
 }
 
@@ -903,3 +923,6 @@ window.addEventListener('DOMContentLoaded',()=>{
 document.getElementById('profile-overlay').addEventListener('click',function(e){if(e.target===this&&loadProfile())closeProfileModal();});
 const _s=document.createElement('style');_s.textContent='@keyframes spin{to{transform:rotate(360deg);}}';document.head.appendChild(_s);
 </script>
+
+</body>
+</html>
