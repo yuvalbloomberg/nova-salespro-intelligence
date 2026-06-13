@@ -1,4 +1,4 @@
-<!-- Nova Sales Intelligence — v3.4 | 2026-06-13 | Competitor alert timeout fix, all cards always visible -->
+<!-- Nova Sales Intelligence — v3.5 | 2026-06-13 | Competitor alert timeout fix, all cards always visible -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -201,7 +201,7 @@ a{text-decoration:none;color:inherit;}
           <svg viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" stroke="white" stroke-width="1.5"/><circle cx="9" cy="9" r="3" fill="white"/></svg>
         </div>
         <div class="logo-text">Nova <span>Sales Intelligence</span></div>
-        <div style="font-size:10px;font-weight:500;color:var(--t4);font-family:'DM Mono',monospace;background:var(--bg);border:1px solid var(--b1);border-radius:4px;padding:2px 6px;margin-left:8px;letter-spacing:.04em;">v3.4</div>
+        <div style="font-size:10px;font-weight:500;color:var(--t4);font-family:'DM Mono',monospace;background:var(--bg);border:1px solid var(--b1);border-radius:4px;padding:2px 6px;margin-left:8px;letter-spacing:.04em;">v3.5</div>
       </div>
       <div class="topbar-right">
         <div class="profile-btn" onclick="showProfile()">
@@ -485,6 +485,36 @@ function goBack(){
 let currentLang = 'en';
 const LANG_MAP = {'EN':'en','한국어':'ko','日本語':'ja','中文':'zh'};
 const LANG_NAME = {'ko':'Korean','ja':'Japanese','zh':'Mandarin Chinese'};
+let _savedEnglish = null;
+
+function _saveEnglishContent() {
+  const summaryEl = document.getElementById('dyn-exec-text');
+  const bizEl = document.getElementById('dyn-signals-biz');
+  const newsEl = document.getElementById('dyn-signals-news');
+  const deepEl = document.getElementById('dyn-deep-intel');
+  _savedEnglish = {
+    summary: summaryEl?.textContent || '',
+    bizSignals: [...(bizEl?.querySelectorAll('.sig-text')||[])].map(el=>el.textContent),
+    newsSignals: [...(newsEl?.querySelectorAll('.sig-text')||[])].map(el=>el.textContent),
+    deepTitles: [...(deepEl?.querySelectorAll('[style*="font-weight:500"]')||[])].map(el=>el.textContent),
+    deepInsights: [...(deepEl?.querySelectorAll('[style*="color:var(--t2)"]')||[])].map(el=>el.textContent),
+  };
+}
+
+function _restoreEnglishContent() {
+  if (!_savedEnglish) return;
+  const summaryEl = document.getElementById('dyn-exec-text');
+  if (summaryEl && _savedEnglish.summary) summaryEl.textContent = _savedEnglish.summary;
+  const bizEl = document.getElementById('dyn-signals-biz');
+  if (bizEl) [...(bizEl.querySelectorAll('.sig-text')||[])].forEach((el,i) => { if(_savedEnglish.bizSignals[i]) el.textContent=_savedEnglish.bizSignals[i]; });
+  const newsEl = document.getElementById('dyn-signals-news');
+  if (newsEl) [...(newsEl.querySelectorAll('.sig-text')||[])].forEach((el,i) => { if(_savedEnglish.newsSignals[i]) el.textContent=_savedEnglish.newsSignals[i]; });
+  const deepEl = document.getElementById('dyn-deep-intel');
+  if (deepEl) {
+    [...(deepEl.querySelectorAll('[style*="font-weight:500"]')||[])].forEach((el,i) => { if(_savedEnglish.deepTitles[i]) el.textContent=_savedEnglish.deepTitles[i]; });
+    [...(deepEl.querySelectorAll('[style*="color:var(--t2)"]')||[])].forEach((el,i) => { if(_savedEnglish.deepInsights[i]) el.textContent=_savedEnglish.deepInsights[i]; });
+  }
+}
 
 document.addEventListener('click', async e => {
   const btn = e.target.closest('.lang-btn');
@@ -495,13 +525,14 @@ document.addEventListener('click', async e => {
   btn.classList.add('active');
   const lang = LANG_MAP[btn.textContent.trim()] || 'en';
   if (lang === currentLang) return;
-  currentLang = lang;
   if (lang === 'en') {
-    const cacheKey = `nova_sales_${currentDetailId}_v3`;
-    const cached = getCache(cacheKey);
-    if (cached && currentDetailId) renderDetail(currentDetailId, COMPANIES[currentDetailId], cached);
+    currentLang = 'en';
+    _restoreEnglishContent();
     return;
   }
+  // Save English before first translation
+  if (currentLang === 'en') _saveEnglishContent();
+  currentLang = lang;
   await translateCurrentView(lang);
 });
 
@@ -644,6 +675,7 @@ function openDetail(id){
 
   // Reset language to EN
   currentLang = 'en';
+  _savedEnglish = null;
   document.querySelectorAll('#detail-dynamic .lang-btn').forEach(b => {
     b.classList.toggle('active', b.textContent.trim() === 'EN');
   });
